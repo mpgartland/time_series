@@ -2,22 +2,25 @@
 title: "Week 1-Zoo"
 output: html_document
 ---
-# LOAD LIBRARIES
-# you may need to install packages, if this is the first time you use them. Select Packages > Install Packages in R/RStudio) 
+
+# Time Series using ZOO
+#LOAD LIBRARIES
+#you may need to install packages, if this is the first time you use them. Select Packages > Install Packages in R/RStudio) 
 
 
-setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/Week 1")
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/TimeSeries/time_series/Week 1")
+
 
 ```{r}
 library(tseries)
 library(zoo)
 #import dataset into a dataframe
-
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/Week 1")
 cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = "%m/%d/%y"))
 #To retrieve only dates use
-time(ciscots)
+head(time(ciscots))
 # Retrieve start date
 start(ciscots)
 # Retrieve End date
@@ -113,17 +116,21 @@ rts_10 = window(rts, start = as.Date("2010-01-01"), end = as.Date("2010-12-31"))
 plot(rts_10, type='l', ylab="log returns", main="Plot of 2010 data") 
 ```
 
-
+```{r}
 # NORMALITY TESTS 
 # Perform Jarque-Bera normality test. 
 normalTest(rts,method=c("jb")) 
-               
+```
+
+```{r}
 # COMPUTE ACF AND PLOT CORRELOGRAM 
 #prints acf values to console 
 acf(rt, plot=F) 
 #plot acf values on graph (correlogram) 
 acf(rt, plot=T) 
-               
+```
+
+```{r}
 # COMPUTE LJUNG-BOX TEST FOR WHITE NOISE (NO AUTOCORRELATION) 
 # to Lag 6 
 Box.test(rts,lag=6,type='Ljung') 

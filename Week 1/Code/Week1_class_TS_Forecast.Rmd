@@ -1,0 +1,362 @@
+===
+Week1_class.Rmd
+Requires: datasets, fma, forecast packages
+===
+
+### let's play with time series data in R using TS and Forecast
+first let's get some
+
+We'll start with the classic "airline passenger example" - the data are in the datasets package
+```{r}
+library(datasets)
+
+data(AirPassengers)
+
+AP <- AirPassengers
+
+#inspect the series
+AP
+
+class(AP)
+length(AP)
+start(AP)
+end(AP)
+
+summary(AP)
+
+```
+How about some basic exploratory data analysis (EDA)?  First some pictures.  
+
+There are lots of ways to plot time series data.  Here are some of the most basic commands.
+
+
+```{r}
+# The base "plot" command
+plot(AP, main = "Plot command")
+
+```
+
+The Plot.ts command requires the same time frame
+```{r}
+plot.ts(AP, main = "Plot.ts command")
+
+```
+
+The ts.plot command doesn't require the same time frame but does require the same frequency
+```{r}
+ts.plot(AP, main = "Ts.plot command")
+
+```
+
+Regardless of the command, what do you notice about the series?
+
+The qualities you notice will affect the way we model the data.  Trend, cycles, and seasonality are all on the agenda for next week.
+
+Now we can explore some of the simple forecasting methods we talked about earlier.
+
+These commands are part of the "forecast" package so you'll need to load that.
+
+### Some simple forecasts - let's look 4 years out
+```{r}
+library(forecast)
+Mean <- meanf(AP, h=48) 
+class(Mean)
+head(Mean)
+
+Naive <- naive(AP, h=48)
+class(Naive)
+head(Naive)
+
+Seasonal <- snaive(AP, h=48)
+class(Seasonal)
+Seasonal
+
+Drift <- rwf(AP, drift=TRUE, h=48)
+class(Drift)
+head(Drift)
+
+```
+
+These simple forecasts can be charted with the "plot command"
+
+```{r}
+library(ggplot2)
+autoplot(Mean)
+plot(Mean)
+plot.ts(Mean)
+
+plot(Naive)
+
+plot(Seasonal)
+
+plot(Drift)
+
+```
+
+Let's look at them on the same chart. 
+```{r}
+plot(AP, plot.type="single", main="Simple Forecasts", ylab="Airline Passengers",ylim = c(50,750))
+lines(Mean$mean, col = "blue")
+lines(Naive$mean, col = "red")
+lines(Seasonal$mean, col = "green")
+lines(Drift$mean, lty = 2)
+legend("topleft", legend=c("Mean","Naive","Seasonal","Drift"), col=c("blue", "red", "green"), lty = c(1,1,1,2))
+```
+
+
+
+What if we change the time frame for the chart?  Let's just look at 1956 on?  Use the "window" command.
+```{r}
+AP.short = window(AP, start = c(1956,1))
+AP.short
+```
+Now lets see that chart again:
+
+```{r}
+plot(AP.short, plot.type="single",main="Simple Forecasts", ylab="Airline Passengers")
+lines(Mean$mean, col = "blue")
+lines(Naive$mean, col = "red")
+lines(Seasonal$mean, col = "green")
+lines(Drift$mean, lty = 2)
+legend("topleft", legend=c("Mean","Naive","Seasonal","Drift"), col=c("blue", "red", "green"), lty = c(1,1,1,2))
+```
+In this case, the window just changed the appearance of the chart. But you need to pay attention to the date range you are using for your calculations because they can change your results.
+
+```{r}
+Mean.short <- meanf(AP.short, h=48)
+Naive.short <- naive(AP.short, h=48)
+Seasonal.short <- snaive(AP.short, h=48)
+Drift.short <- rwf(AP.short, drift=TRUE, h=48)
+
+```
+Where would you expect to see the differences?
+
+```{r}
+plot(AP.short, plot.type="single",main="Simple Forecasts", ylab="Airline Passengers")
+lines(Mean.short$mean, col = "blue")
+lines(Naive.short$mean, col = "red")
+lines(Seasonal.short$mean, col = "green")
+lines(Drift.short$mean, lty = 2)
+legend("topleft", legend=c("Mean","Naive","Seasonal","Drift"), col=c("blue", "red", "green"), lty = c(1,1,1,2))
+```
+
+Let's compare the numbers
+
+```{r}
+all_mean <- cbind(Mean$mean, Mean.short$mean)
+all_naive <- cbind(Naive$mean, Naive.short$mean)
+all_seasonal <- cbind(Seasonal$mean, Seasonal.short$mean)
+all_drift <- cbind(Drift$mean, Drift.short$mean)
+
+
+all_mean
+
+all_naive
+
+all_seasonal
+
+all_drift
+```
+
+So PAY ATTENTION to your date range
+
+Next up:  forecast accuracy
+
+How good are our simple forecasts? How do we know? We need to compare the forecast with the actual. The charts we did before showed forecasts outside of our sample range - in this dataset, we don't have actual numbers to compare with. 
+
+Remember what you learned in ADM and PM: training and test datasets.  This is why the windowing is important.
+
+Let's look at models using the entire date range and set up the appropriate data structures.  
+
+```{r}
+#what if we use the 80/20 split from ADM?
+length(AP)
+trainObs = round(length(AP) * .8)
+trainObs
+
+testObs = length(AP) - trainObs
+testObs
+
+
+train.AP <- window(AP, start = c(1949,1), end = c(1949,trainObs))
+
+test.AP <- window(AP, start = c(1949,trainObs+1))
+
+```
+Do we think this makes sense?  Remember, our test/training split before didn't have the concept of time.  Here we are splitting things in the middle of a year.  
+
+Let's proceed to see where it gets us.
+```{r}
+Mean.split <- meanf(train.AP, h=testObs)
+Naive.split <- naive(train.AP, h=testObs)
+Seasonal.split <- snaive(train.AP, h=testObs)
+Drift.split <- rwf(train.AP, drift=TRUE, h=testObs)
+
+plot(AP, plot.type="single",main="Simple Forecasts", ylab="Airline Passengers")
+lines(Mean.split$mean, col = "blue")
+lines(Naive.split$mean, col = "red")
+lines(Seasonal.split$mean, col = "green")
+lines(Drift.split$mean, lty = 2)
+```
+
+What do we think?  How do we evaluate things?  Let's start by looking at the residuals. How far off is our simple prediction? 
+
+```{r}
+
+
+plot(Naive.split$mean - test.AP, col = "red", main = "Naive")
+abline(a = 0, b = 0)
+
+plot(Seasonal.split$mean - test.AP, col = "green",main = "Seasonal")
+abline(a = 0, b = 0)
+
+plot(Drift.split$mean - test.AP, lty = 2,main = "Drift")
+abline(a = 0, b = 0)
+
+plot(Mean.split$mean - test.AP, col = "blue", main = "Mean")
+abline(a = 0, b = 0)
+
+```
+If a forecast is correct, the predicted value should equal the actual value.  Given that we have many observations, we want our forecast to equal the actual ON AVERAGE - which is where the 0 mean for residuals comes from. 
+
+Remember we said they should be 
+* uncorrelated
+* have mean zero
+* have constant variance
+* be normally distributed
+
+So, how did this simple model do?
+
+
+```{r}
+
+mean(test.AP - Mean.split$mean)
+mean(test.AP - Naive.split$mean)
+mean(test.AP - Seasonal.split$mean)
+mean(test.AP - Drift.split$mean)
+
+```
+It doesn't look like the mean of the residuals are zero.  Are these models bad?  In this simple case, probably.  
+
+How do we assess the accuracy of a forecast?  Remember, we have several measures. Luckily, they are all packaged into one command.
+```{r}
+accuracy(Mean.split, test.AP)
+
+accuracy(Naive.split, test.AP)
+
+accuracy(Seasonal.split, test.AP)
+
+accuracy(Drift.split, test.AP)
+
+
+```
+
+
+Another example: Stock market data
+NOTE:  working with daily data in R is painful.  We will use a simple format here and get back to the issues of dealing with "raw" data later.
+
+
+```{r}
+#Dow jones daily data
+library(fma)
+
+dj <- dowjones
+class(dj)
+length(dj)
+start(dj)
+end(dj)
+
+head(dj)
+
+summary(dj)
+
+
+```
+This is a time series that has been rescaled to take out the date part.  It's daily closing prices for the Dow Jones from 28 Aug - 18 Dec 1972
+
+
+
+```{r}
+plot(dj, main = "Dow Jones: 28 Aug - 18 Dec 1972")
+
+
+```
+
+
+Let's see how the simple forecasts do.  What if we forecast out 30 days?
+
+### Some simple forecasts
+```{r}
+plot(meanf(dj, h = 30), xlab = "Time", ylab = "Value $", main = "Dow Jones mean")
+
+plot(naive(dj, h = 30), xlab = "Time", ylab = "Value $", main = "Dow Jones naive")
+
+plot(snaive(dj, h = 30), xlab = "Time", ylab = "Value $", main = "Dow Jones seasonal")
+
+plot(rwf(dj, drift = TRUE, h = 30), xlab = "Time", ylab = "Value $", main = "Dow Jones drift")
+
+# All on one chart
+plot(rwf(dj, drift=TRUE, h=30, level=0), xlab="Time", ylab="Value $", main="")
+lines(naive(dj, h=30, level=0)$mean, xlab="", ylab="", main="", col="green")
+lines(meanf(dj, h=30, level=0)$mean, xlab="", ylab="", main="", col="red")
+
+legend("topleft",
+  legend = c("Drift", "Naive", "Mean"),
+  col = c("blue", "green", "red"), lty=1)
+
+```
+
+
+
+
+These are "out of sample forecasts" - so we can't really gauge the accuracy.  Let's do our in sample test.
+
+How about the test/train split?  What makes sense?  
+
+```{r}
+#because this is less than one year's worth of daily data, we can still use a percentage approach.
+trainObs = round(length(dj) * .7)
+trainObs
+train.dj <- window(dj, end = trainObs)
+
+test.dj <- window(dj, start = trainObs+1)
+
+
+plot(train.dj, ylim = c(105, 125), xlim = c(0,length(dj)))
+lines(test.dj, col = "blue")
+
+```
+
+Okay, now for our simple forecasts
+
+```{r}
+Mean.dj.split <- meanf(train.dj, h=length(test.dj))
+Naive.dj.split <- naive(train.dj, h=length(test.dj))
+Seasonal.dj.split <- snaive(train.dj, h=length(test.dj))
+Drift.dj.split <- rwf(train.dj, drift = TRUE, h=length(test.dj))
+
+
+```
+First, let's look at the pictures.
+
+```{r}
+plot(dj)
+lines(Mean.dj.split$mean, col = "blue")
+lines(Naive.dj.split$mean, col = "red")
+lines(Drift.dj.split$mean, lty = 2)
+```
+Which model would you use?
+
+Let's look at the accuracy measures. 
+
+```{r}
+accuracy(Mean.dj.split, test.dj)
+
+accuracy(Naive.dj.split, test.dj)
+
+
+accuracy(Drift.dj.split, test.dj)
+
+
+```
+

@@ -1,0 +1,49 @@
+---
+title: "Intro to Forecast ans GGPlots"
+output: html_document
+---
+
+# Intro to Forecast, GGplots and pipes
+
+### shortcut for rmarkdown box Strl/CMD + Opt + I
+### Shortcut for pipes Ctrl+Shift+M, Cmd+Shift+M.
+
+```{r}
+library(forecast)
+library(ggplot2)
+
+# ETS forecasts
+USAccDeaths %>%
+  ets %>%
+  forecast %>%
+  autoplot
+```
+
+```{r}
+# Automatic ARIMA forecasts
+WWWusage %>%
+  auto.arima %>%
+  forecast(h=20) %>%
+  autoplot
+```
+
+
+```{r}
+# ARFIMA forecasts
+library(fracdiff)
+x <- fracdiff.sim( 100, ma=-.4, d=.3)$series
+arfima(x) %>%
+  forecast(h=30) %>%
+  autoplot
+```
+
+  
+```{r}
+# Forecasting with STL
+USAccDeaths %>%
+  stlm(modelfunction=ar) %>%
+  forecast(h=36) %>%
+  autoplot
+```
+  
+  
