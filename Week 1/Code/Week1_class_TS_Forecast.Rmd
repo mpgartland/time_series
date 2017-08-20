@@ -10,13 +10,13 @@ We'll start with the classic "airline passenger example" - the data are in the d
 ```{r}
 library(datasets)
 
-data(AirPassengers)
-
+data(AirPassengers) 
 AP <- AirPassengers
-
-#inspect the series
 AP
 
+
+
+#Attributes
 class(AP)
 length(AP)
 start(AP)
@@ -42,13 +42,6 @@ plot.ts(AP, main = "Plot.ts command")
 
 ```
 
-The ts.plot command doesn't require the same time frame but does require the same frequency
-```{r}
-ts.plot(AP, main = "Ts.plot command")
-
-```
-
-Regardless of the command, what do you notice about the series?
 
 The qualities you notice will affect the way we model the data.  Trend, cycles, and seasonality are all on the agenda for next week.
 
