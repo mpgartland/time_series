@@ -76,7 +76,6 @@ These simple forecasts can be charted with the "plot command"
 library(ggplot2)
 autoplot(Mean)
 plot(Mean)
-plot.ts(Mean)
 
 plot(Naive)
 
