@@ -5,7 +5,9 @@ output: html_document
 
 # Intro to Forecast, GGplots and pipes
 
-### shortcut for rmarkdown box Strl/CMD + Opt + I
+### shortcut for rmarkdown box Ctrl/CMD + Opt + I
+
+
 ### Shortcut for pipes Ctrl+Shift+M, Cmd+Shift+M.
 
 ```{r}
