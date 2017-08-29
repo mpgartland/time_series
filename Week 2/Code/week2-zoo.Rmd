@@ -19,12 +19,6 @@ setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/
 cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = "%m/%d/%y"))
-#To retrieve only dates use
-head(time(ciscots))
-# Retrieve start date
-start(ciscots)
-# Retrieve End date
-end(ciscots)
 ```
 
 
@@ -106,15 +100,6 @@ lines(xfit, yfit, col="blue", lwd=2)
 qqnorm(rt) 
 qqline(rt, col = 2) 
                  
-# CREATE TIME PLOTS 
-# simple plot where x-axis is not labeled with time 
-plot(rt) 
-# use time series object rts to draw time plot indexed with time 
-plot(rts) 
-# creates subsets of data for a certain period of time 
-rts_10 = window(rts, start = as.Date("2010-01-01"), end = as.Date("2010-12-31")) 
-# plot the new subset 
-plot(rts_10, type='l', ylab="log returns", main="Plot of 2010 data") 
 ```
 
 ```{r}
