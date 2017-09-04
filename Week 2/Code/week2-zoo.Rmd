@@ -99,6 +99,7 @@ lines(xfit, yfit, col="blue", lwd=2)
 # CREATE NORMAL PROBABILITY PLOT 
 qqnorm(rt) 
 qqline(rt, col = 2) 
+plot(rt)
                  
 ```
 

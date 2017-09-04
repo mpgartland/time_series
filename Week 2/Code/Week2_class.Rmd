@@ -51,7 +51,7 @@ Now it is time to play with "real" data. We will use the data from FRED which yo
 
 ```{r}
 library(quantmod)
-getSymbols("DJIA", src="FRED")  #-- takes ticker names and pulls data from FRED
+getSymbols("APPL", src="YAHOO")  #-- takes ticker names and pulls data from FRED
 class(DJIA)
 head(DJIA)
 
@@ -64,7 +64,8 @@ temp <- ts(na.omit(DJIA))
 mydj <- ts(temp[1:length(temp)], start = 1)
 class(mydj)
 head(mydj)
-plot(mydj, main = "Dow Jones Industrial average \n 28 Aug 2006 - 26 Aug 2016", ylab = "Index")
+tail(mydj)
+plot(mydj, main = "Dow Jones Industrial average \n 28 Aug 2006 - 29 Aug 2017", ylab = "Index")
 
 ```
 
@@ -74,11 +75,11 @@ There is too much going on here - we will limit the series to the last year whic
 
 mydj.short <- window(mydj, start = length(mydj)-250, end = length(mydj)) #note the indexes - you can change this if you want
 
-plot(mydj.short, main = "Dow Jones Industrial average \n 250 trading days ending 26 Aug 2016",  ylab = "Index")
+plot(mydj.short, main = "Dow Jones Industrial average \n 250 trading days ending 29 Aug 2017",  ylab = "Index")
 
 #create the change in the DJ 
 diff_mydj <- diff(mydj.short)
-plot(diff_mydj, main = "Change in daily Dow Jones Industrial average \n 250 trading days ending 26 Aug 2016", ylab = "Change in index")
+plot(diff_mydj, main = "Change in daily Dow Jones Industrial average \n 250 trading days ending 29 Aug 2017", ylab = "Change in index")
 abline(a=0,b=0, col = "red")
 
 
