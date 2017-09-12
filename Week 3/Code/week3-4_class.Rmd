@@ -83,7 +83,7 @@ Notice that it shows the parameter settings we gave it. We now have a setting fo
 
 Adding these lines to our chart.  What is the effect of adding trend? 
 ```{r}
-plot(fith, PI=FALSE, ylim = c(400, 600))
+plot(fith, PI=TRUE, ylim = c(400, 600))
 lines(fitted(fith), type = "o", col="purple") 
 lines(fith$mean, col="purple", type="o") 
 lines(test.oil, col = "black", type = "o")
@@ -307,5 +307,42 @@ plot(forecast(fit, h = 8), ylab = "Millions")
 
 
 ```
+Creating a Seasonal Index
+
+
+```{r}
+uk.stl <- stl(UKDriverDeaths,"periodic")
+uk.sa <- seasadj(uk.stl)
+uk.fcast <- holt(uk.sa,36)
+seasf <- sindexf(uk.stl,36)
+uk.fcast$mean <- uk.fcast$mean + seasf
+uk.fcast$lower <- uk.fcast$lower + cbind(seasf,seasf)
+uk.fcast$upper <- uk.fcast$upper + cbind(seasf,seasf)
+uk.fcast$x <- UKDriverDeaths
+
+
+plot(uk.fcast,main="Forecasts from Holt's method with seasonal adjustment")
+
+print(seasf)
+```
+
+Modeling with a Spline
+
+```{r}
+plot(uspop)
+
+fcast <- splinef(uspop,h=5)
+plot(fcast)
+summary(fcast)
+```
+
+Box-Cox Transformation
+Adjusting the Lambda
+```{r}
+qqnorm(AirPassengers)
+
+qqnorm(BoxCox(AirPassengers, .4))
+```
+
 
 Same thing. 
