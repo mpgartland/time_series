@@ -148,16 +148,16 @@ plot(fit2, type="o", ylab="Air passengers in Australia (millions)",
      xlab="Year", fcol="white", PI=FALSE)
 lines(fitted(fit0), col="brown") 
 lines(fitted(fit1), col="blue") 
-lines(fitted(fit2), col="red")
+lines(fitted(fit2), col="gold")
 lines(fitted(fit3), col="green")
 lines(fitted(fit4), col="purple")
 lines(fit0$mean, col="brown", type="o") 
 lines(fit1$mean, col="blue", type="o") 
-lines(fit2$mean, col="red", type="o")
+lines(fit2$mean, col="gold", type="o")
 lines(fit3$mean, col="green", type="o")
 lines(fit4$mean, col="purple", type="o")
 
-legend("topleft", lty=1, cex=0.6, col=c("black","brown","blue","red","green", "purple"), 
+legend("topleft", lty=1, cex=0.6, col=c("black","brown","blue","gold","green", "purple"), 
        c("Data","SES", "Holt","Exponent","Additive damped trend", "Mult damped trend"))
 ```
 
@@ -212,7 +212,8 @@ Let's look at Tourists to Australia
 aust <- window(austourists,start=2005)
 fit1hw <- hw(aust,seasonal="additive")
 fit2hw <- hw(aust,seasonal="multiplicative")
-fit3hw <- hw(aust,seasonal="additive", damped = TRUE)
+fit3hw <- hw(aust,seasonal="multiplicative", damped = TRUE)
+
 
 plot(fit2hw,ylab="International visitor night in Australia (millions)",
      PI=FALSE, type="o", fcol="white", xlab="Year")
