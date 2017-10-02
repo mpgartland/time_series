@@ -76,9 +76,15 @@ legend("topleft", cex = 0.75,legend=c("Level","3 month MA"), col=c("black", "red
 It's the Dow Jones again!  Remember we said DJ isn't stationary so we take differences?  Here's how the ARIMA process models them:
 
 ```{r arima dj}
+plot(dj)
+plot(diff(dj))
+djarima <- auto.arima(dj, seasonal = FALSE)
+djarima
 
 djarima <- auto.arima(dj, seasonal = FALSE)
 djarima
+
+
 diffdjarima<- auto.arima(diff(dj), seasonal = FALSE)
 diffdjarima
 
@@ -160,6 +166,8 @@ summary(fit)
 
 What does the auto.arima say?
 
+
+
 ```{r}
 fit <- auto.arima(eeadj, seasonal = FALSE)
 summary(fit)
@@ -180,7 +188,10 @@ What's with the fitdf = 4?
 
 When testing the residuals of an estimated ARIMA model, the degrees of freedom need to be adjusted to reflect the parameter estimation. For example, for an ARIMA(p,0,q) model, the degrees of freedom should be set to p+q.
 
-
+```{r}
+fit1 <- auto.arima(elecequip, seasonal = TRUE)
+summary(fit1)
+```
 And more pictures?
 
 ```{r}

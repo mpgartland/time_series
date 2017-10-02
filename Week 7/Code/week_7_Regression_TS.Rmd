@@ -1,0 +1,329 @@
+---
+output:
+  html_document:
+    df_print: paged
+---
+===
+Week3_class.Rmd
+Requires: ISLR, quantmod, fpp, forecast
+===
+ 
+
+```{r}
+library(ISLR)
+autos <- Auto
+head(autos)
+str(autos)
+
+
+```
+
+Question: what affects mpg?
+```{r}
+plot(mpg~cylinders, data=autos)
+boxplot(mpg~cylinders, data=autos)
+```
+
+
+What about horsepower?
+```{r}
+plot(mpg~horsepower,data=autos)
+
+```
+
+
+Are relationships linear?
+```{r}
+model1 <- lm(mpg~horsepower, data = autos)
+summary(model1)
+plot(model1)
+abline(model1, col = "blue")
+
+```
+
+
+This relationship looks non-linear.  How do we capture that curve?  We can add a quadratic term
+
+There are two ways to do this:
+1. explicitly create the square and include it in the regression
+
+```{r}
+autos$hpsq <- autos$horsepower^2
+model2 <- lm(mpg~horsepower+ hpsq,data=autos)
+summary(model2)
+
+```
+2. add quadratic term to regression only
+
+```{r}
+model2 <- lm(mpg~horsepower + I(horsepower^2), data = autos)
+summary(model2)
+
+plot(mpg~horsepower,data=autos)
+
+# create 100 x-values based on min/max of plotted values
+minMax = range(autos$horsepower)
+xVals = seq(minMax[1], minMax[2], len = 100) 
+
+yVals = predict(model2, newdata = data.frame(horsepower=xVals))
+
+lines(xVals, yVals, col = "red")
+abline(model1, col = "blue")
+```
+
+
+
+What does the quadratic term do?  What does it mean?
+if what does a one unit change in X imply for y?
+Guess what?  It depends.
+
+A one unit change from 50 to 51:
+```{r}
+#numeric example HP = 50
+mpg_50 <- model2$coefficients[1] + model2$coefficients[2]*50 + model2$coefficients[3]*50*50
+# numeric example HP = 51
+mpg_51 <- model2$coefficients[1] + model2$coefficients[2]*51 + model2$coefficients[3]*51*51
+
+mpg_51 - mpg_50
+
+
+```
+
+Doesn't have the same effect as a one unit change between 150 and 151:
+
+```{r}
+#numeric example HP = 150
+mpg_150 <- model2$coefficients[1] + model2$coefficients[2]*150 + model2$coefficients[3]*150*150
+# numeric example HP = 151
+mpg_151 <- model2$coefficients[1] + model2$coefficients[2]*151 + model2$coefficients[3]*151*151
+
+mpg_151 - mpg_150
+```
+
+Remember, linear relationships are constant
+
+```{r}
+#numeric example HP = 50
+mpg_50 <- model1$coefficients[1] + model1$coefficients[2]*50 
+# numeric example HP = 51
+mpg_51 <- model1$coefficients[1] + model1$coefficients[2]*51 
+
+mpg_51 - mpg_50
+
+
+#numeric example HP = 50
+mpg_150 <- model1$coefficients[1] + model1$coefficients[2]*150 
+# numeric example HP = 51
+mpg_151 <- model1$coefficients[1] + model1$coefficients[2]*151 
+
+mpg_151 - mpg_150
+```
+
+Effects of time.  Linear regression with trend - 
+the tslm package is a linear regression package for time series. It has some lovely things built into it already, like the concept of trend.
+```{r}
+library(forecast)
+library(fpp)
+ibmclose.t <- tslm(ibmclose ~ trend)
+summary(ibmclose.t)
+
+```
+We can use this to forecast - either in sample using a test/train split or out of sample. 
+
+```{r}
+ibmclose.f <-forecast(ibmclose.t)
+plot(ibmclose.f, main = "Trend: IBM", xlab = "t")
+lines(fitted(ibmclose.t), col = "blue")
+```
+How about home sales?
+
+
+```{r}
+hsales.t <- tslm(hsales ~ trend)
+summary(hsales.t)
+
+```
+
+Doesn't look like a trend model is helpful here
+
+
+```{r}
+hsales.f <-forecast(hsales.t)
+plot(hsales.f, main = "Trend: Homesales", xlab = "t")
+lines(fitted(hsales.t), col = "blue")
+```
+
+Where might it be helpful?
+
+```{r}
+library(quantmod)
+getSymbols("GDP", src="FRED")
+gdp <- ts(window(GDP, start = "1980-01-01"), start = c(1980,1), freq = 4)
+gdp.t <- tslm(gdp ~ trend)
+summary(gdp.t)
+gdp.f <-forecast(gdp.t)
+plot(gdp.f, main = "Trend: GDP", xlab = "t")
+lines(fitted(gdp.t), col = "blue")
+
+
+```
+
+Multiple regression. Let's see if we can improve on the mpg model we did earlier.
+
+```{r}
+model2 <- lm(mpg~horsepower + I(horsepower^2), data = autos)
+
+#what else do we think is important?  Weight? Cylinders? Model year?
+
+model3 <- lm(mpg ~ horsepower + I(horsepower^2) + cylinders + weight + year, data = autos)
+summary(model3)
+```
+
+
+More work with our home sales data.  Fit some trend and seasonal dummies:
+
+```{r}
+#both trend and seasonal
+library(forecast)
+hsales.ts <- tslm(hsales ~ trend + season)
+summary(hsales.ts)
+
+
+
+```
+Trend doesn't seem to help much.  Simplify:
+
+```{r}
+hsales.ts <- tslm(hsales ~ season)
+summary(hsales.ts)
+```
+
+What do we think might affect home sales? How about interest rates?
+Let's grab some interest rate data from FRED
+
+```{r}
+
+
+getSymbols("MPRIME", src ="FRED")
+
+prime <- ts(window(MPRIME, start = "1973-01-01"), start = c(1973,1), freq = 12)
+
+
+
+class(prime)
+start(prime)
+end(prime)
+
+```
+
+What do these series look like when plotted together? Here's some nifty code to add a different axis on the right side of the chart
+
+```{r}
+par(mar = c(5, 4, 4, 4) + 0.3)  # Leave space for right axis
+plot(hsales, xlim = c(as.Date(1973,1), as.Date(2016,7))) # first plot
+par(new = TRUE)
+plot(prime, col= "blue", type = "l", axes = FALSE, bty = "n", xlab = "", ylab = "")
+axis(side=4, at = pretty(range(prime)))
+mtext("prime", side=4, line=3)
+
+```
+
+Notice we have more income data than home sales data here. Linear regression functions do not like this. (See matrix notation section 5/5 in your book for more info.)
+```{r}
+#model.test<- tslm(hsales ~ prime + season)
+length(hsales)
+length(prime)
+
+```
+
+
+How can we only play with the time frame that we have data for both series? We could have specified an enddate when we created the prime series.  Or we can take the intersection of the date ranges. 
+
+```{r}
+hdata <- ts.intersect(hsales,prime)
+head(hdata)
+
+plot(hdata)
+
+#you can put them on one chart but you'll need to change the axes like we did before
+plot(hdata, plot.type = "single")
+
+
+
+#access mts objects by column number
+colnames(hdata)
+
+par(mar = c(5, 4, 4, 4) + 0.3)  # Leave space for right axis
+plot(hdata[,1], ylab = "") # first plot
+par(new = TRUE)
+plot(hdata[,2], col= "blue", type = "l", axes = FALSE, bty = "n", xlab = "", ylab = colnames(hdata)[1], main = "Home sales and interest rates")
+axis(side=4, at = pretty(range(hdata[,2])))
+mtext(colnames(hdata)[2], side=4, line=3)
+```
+
+Now can we run a model?
+
+
+```{r}
+rates.model1<- tslm(hdata[,1] ~ hdata[,2])
+summary(rates.model1)
+
+rates.model2<- tslm(hdata[,1] ~ hdata[,2] + season)
+summary(rates.model2)
+
+```
+
+How are we doing?  Have we come close to meeting our ideal model requirements?  Let's start with autocorrelation in the residuals.
+
+```{r}
+rates.res1 <- residuals(rates.model1)
+par(mfrow = c(1,2))
+plot(rates.res1, main = "Residuals from simple model", ylab = "Residuals", xlab = "Time")
+abline(0,0, col = "red")
+Acf(rates.res1, lag.max = 12, main = "ACF of residuals for simple model")
+```
+
+As we've seen before, simple often doesn't quite make it.  How about our model with seasonal effects?
+
+```{r}
+rates.res2 <- residuals(rates.model2)
+par(mfrow = c(1,2))
+plot(rates.res2, main = "Residuals from seasonal model", ylab = "Residuals", xlab = "Time")
+abline(0,0, col = "red")
+Acf(rates.res2, lag.max = 12, main = "ACF of residuals for seasonal model")
+```
+
+Not as nice and neat as the beer example in the book.  Is this unexpected given our regression results?
+
+Cleaner example:
+
+```{r}
+beer2 <- window(ausbeer, start = 1992)
+fit <- tslm(beer2 ~ trend + season)
+summary(fit)
+```
+
+Hmmm.... High Rsquared and strongly significant seasonal patterns.
+
+```{r}
+res <- residuals(fit)
+plot(res, main = "Residuals from beer example", ylab = "Residuals", xlab = "Time")
+abline(0,0, col = "red")
+Acf(res, lag.max = 12, main = "ACF of residuals for beer example")
+```
+
+This example shows that there are few lags where the past values contribute to the variation in current values.  We have a test statistic to look at the relationship between adjacent values:  the Durbin Watson statistic.
+
+```{r}
+dwtest(rates.model1, alt = "two.sided")
+dwtest(rates.model2, alt = "two.sided")
+dwtest(fit, alt = "two.sided")
+
+
+```
+
+There is also the Breush-Godfrey test for higher order autocorrelation.
+
+A great CrossValidated discussion on these statistics as well as the various Box tests: http://stats.stackexchange.com/questions/148004/testing-for-autocorrelation-ljung-box-versus-breusch-godfrey
+
+We'll delve into some of these issues in more detail when we get to ARIMA modelling in a few weeks. 
