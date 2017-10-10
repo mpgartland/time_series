@@ -1,5 +1,5 @@
 ---
-title: "Dynamic Regression and others"
+title: "Dynamic Regression, ARIMAX and others"
 output: html_notebook
 ---
 ```{r}
