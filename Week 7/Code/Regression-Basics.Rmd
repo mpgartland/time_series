@@ -1,0 +1,122 @@
+---
+title: "Regression-basics (used in my ADM Class"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+setwd('/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Data Mining/Week 1')
+insurance <- read.csv("insurance.csv")
+
+Read file
+```{r}
+str(insurance)
+```
+
+```{r}
+# try table of region to see factors
+table(insurance$region)
+```
+
+
+Simple MRLM
+Model 1
+```{r}
+## Step 3: Training a model on the data ----
+ins_model <-lm(charges ~ age  + children + bmi + sex + smoker+
+                 region, data = insurance)
+
+# see the estimated beta coefficients
+coefficients(ins_model)
+
+
+## Step 4: Evaluating model performance ----
+# see more detail about the estimated beta coefficients and regression model
+summary(ins_model)
+```
+
+More complex MRLM
+Model 2
+```{r}
+# add a higher-order "age" term
+#Create a second model
+ins_model2 <-ins_model3 <- lm(charges ~ age + age**2 + children + bmi + sex + smoker+
+                                region, data = insurance)
+
+
+#Look at summary of second model. use summary function
+summary(ins_model2)
+
+#Is there a significant difference between ins_model1 and ins_model2? Use anova function
+anova(ins_model,ins_model2)
+
+```
+
+Model 3 - More complex
+```{r}
+#To add even more power
+# add an indicator for BMI >= 30
+insurance$bmi30 <- ifelse(insurance$bmi >= 30, 1, 0)
+summary(insurance$bmi30)
+
+# create final model
+ins_model3 <- lm(charges ~ age + age**2 + children + bmi + sex + smoker+
+                   bmi30*smoker + region, data = insurance)
+
+summary(ins_model3)
+
+
+```
+Predictions
+```{r}
+#predictions
+C1=data.frame(age=45, sex="female", children=2, bmi=27, bmi30=0, smoker="no",region="southwest")
+P1<-predict(ins_model3,C1,interval="prediction")
+
+C2=data.frame(age=55, sex="male", children=1, bmi=31, bmi30=1, smoker="yes",region="northeast")
+P2<-predict(ins_model3,C2,interval="prediction")
+
+C3=data.frame(age=25, sex="female", children=0, bmi=22, bmi30=0, smoker="no",region="northeast")
+P3<-predict(ins_model3,C3,interval="prediction")
+
+total<-data.frame(rbind(P1,P2,P3))
+mean(total$fit)
+```
+
+Model Diagnostics
+```{r}
+# Check Residuals assumptions of model3
+library(car)
+plot(ins_model3)
+
+# non-constant error variance test
+library(car)
+ncvTest(ins_model3)
+# plot studentized residuals vs. fitted values 
+spreadLevelPlot(ins_model3)
+
+# Evaluate Collinearity
+
+vif(ins_model3) # variance inflation factors 
+#sqrt of vif greater than 2 indicates multicolinearity
+sqrt(vif(ins_model3)) > 2 # problem? Check for less than 
+
+
+
+
+# Test for Autocorrelated Errors
+#if Durbin–Watson is less than 1.0, there may be cause for alarm. 
+durbinWatsonTest(ins_model3)
+
+```
+
+Other Diagnostics
+```{r}
+# Global test of model assumptions
+library(gvlma)
+gvmodel <- gvlma(ins_model3) 
+summary(gvmodel)
+```
+
