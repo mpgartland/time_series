@@ -4,7 +4,7 @@ Requires: datasets, fma, forecast packages
 ===
 
 ### let's play with time series data in R using TS and Forecast
-first let's get some data
+first let's get some data 
 
 We'll start with the classic "airline passenger example" - the data are in the datasets package
 ```{r}
