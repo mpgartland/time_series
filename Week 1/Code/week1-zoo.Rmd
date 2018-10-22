@@ -21,6 +21,7 @@ cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
 
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = "%m/%d/%y"))
+class(ciscots)
 #To retrieve only dates use
 print("head of TS")
 head(time(ciscots))
@@ -56,7 +57,7 @@ head(cisco)
 
 ```{r}    
 #DEFINE LOG RETURNS
-#rts is a time series object since it is created from a TS object
+#rts is a time series object since it is created from a zoo object
 rts = diff(log(ciscots))
 print("Log Return")
 head(rts)
