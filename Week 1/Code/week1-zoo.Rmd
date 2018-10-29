@@ -106,28 +106,3 @@ rts_10 = window(rts, start = as.Date("2010-01-01"), end = as.Date("2010-12-31"))
 # plot the new subset 
 plot(rts_10, type='l', ylab="log returns", main="Plot of 2010 data") 
 ```
-
-```{r}
-# NORMALITY TESTS 
-# Perform Jarque-Bera normality test. 
-normalTest(rts,method=c("jb")) 
-```
-
-```{r}
-# COMPUTE ACF AND PLOT CORRELOGRAM 
-#prints acf values to console 
-acf(rt, plot=F) 
-#plot acf values on graph (correlogram) 
-acf(rt, plot=T) 
-```
-
-```{r}
-# COMPUTE LJUNG-BOX TEST FOR WHITE NOISE (NO AUTOCORRELATION) 
-# to Lag 6 
-Box.test(rts,lag=6,type='Ljung') 
-# to Lag 12 
-Box.test(rts,lag=12,type='Ljung') 
-                     
-```
-
-

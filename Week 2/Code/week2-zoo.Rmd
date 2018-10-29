@@ -1,5 +1,5 @@
 ---
-title: "Week 1-Zoo"
+title: "Week 1-Zoo (part 2)"
 output: html_document
 ---
 
@@ -8,14 +8,14 @@ output: html_document
 #you may need to install packages, if this is the first time you use them. Select Packages > Install Packages in R/RStudio) 
 
 
-setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/TimeSeries/time_series/Week 1")
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week 1")
 
 
 ```{r}
 library(tseries)
 library(zoo)
 #import dataset into a dataframe
-setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/Week 1")
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week1")
 cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = "%m/%d/%y"))
