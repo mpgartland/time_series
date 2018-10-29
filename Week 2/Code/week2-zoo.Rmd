@@ -15,10 +15,11 @@ setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/
 library(tseries)
 library(zoo)
 #import dataset into a dataframe
-setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week1")
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week 1")
 cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = "%m/%d/%y"))
+head(ciscots)
 ```
 
 
