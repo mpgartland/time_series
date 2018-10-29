@@ -143,18 +143,27 @@ library(zoo)</code></pre>
 ##     as.Date, as.Date.numeric</code></pre>
 <pre class="r"><code>#import dataset into a dataframe
 setwd(&quot;/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week 1&quot;)
-cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
+print(&quot;&quot;)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="r"><code>cisco = read.table('Data/cisco_00-10.csv', header=T, sep=',')
 # create time series for cisco prices
+
 ciscots = zoo(cisco$Price, as.Date(as.character(cisco$Date), format = &quot;%m/%d/%y&quot;))
-#To retrieve only dates use
-head(time(ciscots))</code></pre>
+class(ciscots)</code></pre>
+<pre><code>## [1] &quot;zoo&quot;</code></pre>
+<pre class="r"><code>#To retrieve only dates use
+print(&quot;head of TS&quot;)</code></pre>
+<pre><code>## [1] &quot;head of TS&quot;</code></pre>
+<pre class="r"><code>head(time(ciscots))</code></pre>
 <pre><code>## [1] &quot;2000-01-03&quot; &quot;2000-01-04&quot; &quot;2000-01-05&quot; &quot;2000-01-06&quot; &quot;2000-01-07&quot;
 ## [6] &quot;2000-01-10&quot;</code></pre>
-<pre class="r"><code># Retrieve start date
-start(ciscots)</code></pre>
+<pre class="r"><code>print(&quot;Retrieve start date&quot;)</code></pre>
+<pre><code>## [1] &quot;Retrieve start date&quot;</code></pre>
+<pre class="r"><code>start(ciscots)</code></pre>
 <pre><code>## [1] &quot;2000-01-03&quot;</code></pre>
-<pre class="r"><code># Retrieve End date
-end(ciscots)</code></pre>
+<pre class="r"><code>print(&quot;Retrieve End date&quot;)</code></pre>
+<pre><code>## [1] &quot;Retrieve End date&quot;</code></pre>
+<pre class="r"><code>end(ciscots)</code></pre>
 <pre><code>## [1] &quot;2010-12-31&quot;</code></pre>
 </div>
 <div id="creating-new-variables" class="section level1">
@@ -186,27 +195,21 @@ head(cisco)</code></pre>
 ## 2764 2000-01-06 50.00
 ## 2763 2000-01-07 52.94
 ## 2762 2000-01-10 54.90</code></pre>
-</div>
-<div id="creating-new-variables-1" class="section level1">
-<h1>Creating new variables</h1>
-<pre class="r"><code># create lagged series using function lag(tsobject, k==1);
-pricelag = lag(ciscots, k=-1);
-head(pricelag)</code></pre>
-<pre><code>## 2000-01-04 2000-01-05 2000-01-06 2000-01-07 2000-01-10 2000-01-11 
-##      54.03      51.00      50.85      50.00      52.94      54.90</code></pre>
-<pre class="r"><code># diff = p_t - p_(t-1);
-pricedif = diff(ciscots);
-
-#compute simple returns ret = (p_t-p_(t-1))/p_(t-1)
-ret=(ciscots-pricelag)/pricelag
-#Example of data analysis for cisco dataset</code></pre>
 <pre class="r"><code>#DEFINE LOG RETURNS
-#rts is a time series object since it is created from a TS object
+#rts is a time series object since it is created from a zoo object
 rts = diff(log(ciscots))
-
-#to retrieve numerical values from time series use coredata()
+print(&quot;Log Return&quot;)</code></pre>
+<pre><code>## [1] &quot;Log Return&quot;</code></pre>
+<pre class="r"><code>head(rts)</code></pre>
+<pre><code>##  2000-01-04  2000-01-05  2000-01-06  2000-01-07  2000-01-10  2000-01-11 
+## -0.05771382 -0.00294551 -0.01685712  0.05713619  0.03635415 -0.03051554</code></pre>
+<pre class="r"><code>print(&quot;&quot;)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="r"><code>#to retrieve numerical values from time series use coredata()
 # rt is a numerical vector (no date information)
-rt=coredata(rts)
+print(&quot;coredata&quot;)</code></pre>
+<pre><code>## [1] &quot;coredata&quot;</code></pre>
+<pre class="r"><code>rt=coredata(rts)
 #print first 6 values
 head(rt)</code></pre>
 <pre><code>## [1] -0.05771382 -0.00294551 -0.01685712  0.05713619  0.03635415 -0.03051554</code></pre>
@@ -288,7 +291,7 @@ normalTest(rts,method=c(&quot;jb&quot;)) </code></pre>
 ##     Asymptotic p Value: &lt; 2.2e-16 
 ## 
 ## Description:
-##  Mon Oct 22 13:39:54 2018 by user:</code></pre>
+##  Sun Oct 28 20:04:02 2018 by user:</code></pre>
 <pre class="r"><code># COMPUTE ACF AND PLOT CORRELOGRAM 
 #prints acf values to console 
 acf(rt, plot=F) </code></pre>

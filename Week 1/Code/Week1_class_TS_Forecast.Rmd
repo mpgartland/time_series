@@ -83,8 +83,12 @@ plot(Seasonal)
 
 plot(Drift)
 
-```
+plot(decompose(AP))
 
+decompose(AP)
+
+```
+decompose(AP)
 Let's look at them on the same chart. 
 ```{r}
 plot(AP, plot.type="single", main="Simple Forecasts", ylab="Airline Passengers",ylim = c(50,750))

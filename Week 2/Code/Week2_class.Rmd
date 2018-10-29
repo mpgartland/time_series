@@ -1,8 +1,9 @@
 ===
 Week2_class.Rmd
-Requires: quantmod, fma, forecast packages
+Requires: quantmod, fma, forecast packages, fpp
 ===
- 
+
+
 Generating the plots and ACFs from class:
 Hints:  you can change the presentation of charts to have more than one pane per page by setting a graphical parameter (par).  To get a pane of 4 charts like we did for the "Match game" graphs, us par(mfrow=c(2,2))
 ```{r}
@@ -51,9 +52,10 @@ Now it is time to play with "real" data. We will use the data from FRED which yo
 
 ```{r}
 library(quantmod)
-getSymbols("APPL", src="YAHOO")  #-- takes ticker names and pulls data from FRED
+getSymbols("DJIA", src = "FRED")  #-- takes ticker names and pulls data from FRED
 class(DJIA)
 head(DJIA)
+end(DJIA)
 
 
 ```
@@ -65,7 +67,7 @@ mydj <- ts(temp[1:length(temp)], start = 1)
 class(mydj)
 head(mydj)
 tail(mydj)
-plot(mydj, main = "Dow Jones Industrial average \n 28 Aug 2006 - 29 Aug 2017", ylab = "Index")
+plot(mydj, main = "Dow Jones Industrial average \n 28 Aug 2006 - 26 Oct 2018", ylab = "Index")
 
 ```
 
@@ -79,7 +81,7 @@ plot(mydj.short, main = "Dow Jones Industrial average \n 250 trading days ending
 
 #create the change in the DJ 
 diff_mydj <- diff(mydj.short)
-plot(diff_mydj, main = "Change in daily Dow Jones Industrial average \n 250 trading days ending 29 Aug 2017", ylab = "Change in index")
+plot(diff_mydj, main = "Change in daily Dow Jones Industrial average \n 250 trading days ending 26 Oct 2018", ylab = "Change in index")
 abline(a=0,b=0, col = "red")
 
 
