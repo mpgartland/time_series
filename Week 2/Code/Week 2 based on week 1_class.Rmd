@@ -4,55 +4,10 @@ Requires: quantmod, fma, forecast packages, fpp
 ===
 
 
-Generating the plots and ACFs from class:
-Hints:  you can change the presentation of charts to have more than one pane per page by setting a graphical parameter (par).  To get a pane of 4 charts like we did for the "Match game" graphs, us par(mfrow=c(2,2))
-```{r}
-#save default settings
-default_par <- par()
-
-library(fma)
-par(mfrow=c(2,2))
-
-plot(usdeaths, type = "o", main = "1. Monthly accidental deaths in the US")
-plot(internet, type = "o", main = "2. Number of users logged on to an internet server \n each minute over a 100-minute period")
-plot(strikes, type = "o", main = "3. Number of Strikes in the US, 1951 - 1980")
-plot(hsales2, type = "o", main = "4. Sales of new single family homes \n in the US, Jan 1987 - Nov 1995")
-
-
-```
-
-To both calculate the autocorrelation function and generate the acf plot, there are two commands (of course there are!)
-
-The most commonly used one is acf - part of the stats package. The default is that the plot is shown. 
-
-```{r}
-?acf
-littleacf <- acf(hsales2, main = "Function acf")
-
-```
-There is also an Acf function in the forecast package.  Can you tell the difference?
-
-```{r}
-library(forecast)
-?Acf
-capacf <- Acf(hsales2, main = "Function Acf")
-
-```
-
-You can set the number of lags you want to investigate using the lag.max option.  This affects the chart and the calculations.
-```{r}
-AP.short <- window(AirPassengers, start = 1956)
-
-ap.Acf <- Acf(AP.short, lag.max = 12, main = "Autocorrelation for air passengers, 1956 - 1960")
-
-ap.Acf$acf
-```
-
-Now it is time to play with "real" data. We will use the data from FRED which you can access using the quantmod package.
 
 ```{r}
 library(quantmod)
-getSymbols("DJIA", src = "FRED")  #-- takes ticker names and pulls data from FRED
+getSymbols("DJIA", src = "FRED",auto.assign=TRUE)  #-- takes ticker names and pulls data from FRED
 class(DJIA)
 head(DJIA)
 end(DJIA)
@@ -67,7 +22,7 @@ mydj <- ts(temp[1:length(temp)], start = 1)
 class(mydj)
 head(mydj)
 tail(mydj)
-plot(mydj, main = "Dow Jones Industrial average \n 28 Aug 2006 - 26 Oct 2018", ylab = "Index")
+plot(mydj, main = "Dow Jones Industrial average \n 30 Oct 2008 - 26 Oct 2018", ylab = "Index")
 
 ```
 
@@ -97,7 +52,7 @@ There are other arguments for other choices.  For example, see
 http://stats.stackexchange.com/questions/6455/how-many-lags-to-use-in-the-ljung-box-test-of-a-time-series
 
 ```{r}
-Acf(diff_mydj)
+acf(diff_mydj)
 
 #now calculate the test statistic
 Box.test(diff_mydj, lag=10, fitdf=0, type="Lj")
@@ -115,45 +70,12 @@ Box.test(diff_mydj, lag=10, fitdf=0)
 
 You can see for this example, the statistic (which has the same Chi-square distribution to test the same hypothesis) is very close and the conclusion is the same. 
 
-Moving on to another example: working with IBM data
-This code should look vaguely like your homework.  I chose to leave seasonal naive out for this example. 
-
-```{r}
-length(ibmclose)
-#create the test/train split
-train.ibm <- window(ibmclose, start = 1, end = 300)
-test.ibm <- window(ibmclose, start = 301)
-
-# run our simple models
-Mean.ibm.split <- meanf(train.ibm, h=length(test.ibm))
-Naive.ibm.split <- naive(train.ibm, h=length(test.ibm))
-Drift.ibm.split <- rwf(train.ibm, drift = TRUE, h=length(test.ibm))
-
-
-#draw some pictures
-
-plot(ibmclose, plot.type = "single", main = "Simple forecast for IBM stock price")
-lines(Mean.ibm.split$mean, col = "blue")
-lines(Naive.ibm.split$mean, col = "red")
-lines(Drift.ibm.split$mean, col = "green")
-legend("bottomleft", legend=c("Mean","Naive","Drift"), col=c("blue", "red", "green"), lty = c(1,1,1))
-
-```
 
 What do the residuals look like? 
 
-```{r}
-res <- test.ibm - Naive.ibm.split$mean
-plot(res, main = "Residuals from naive forecast for IBM")
-abline(a=0, b=0, col = "red")
-
-Box.test(res, lag=10, fitdf=0, type="Lj")
 
 
-```
-Are these residuals white noise?  What does that mean?
-
-Now: time series decomposition.  The R commands are very simple.  Here are the ones used to generate the charts in the slides:
+Now: more on time series decomposition from week 1.  The R commands are very simple.  Here are the ones used to generate the charts in the slides:
 
 ```{r}
 plot(decompose(hsales))
@@ -196,7 +118,7 @@ plot(ur, main = "Full unemployment rate from FRED")
 
 ```
 
-We are only going to work with the last 10 years
+We are only going to work with the last 10 years. Note one retains the seansonailty and other other is "deseasonized (adjusted)"
 
 ```{r}
 ur.nsa.short <- window(ur.nsa, start = 2006)
@@ -256,6 +178,8 @@ seen more clearly, and also allows any
 substantial departures from the seasonal
 pattern to be easily identified.
 
+
+Another Example with the Forecast Package
 
 ```{r}
 library(forecast)

@@ -5,7 +5,7 @@ require(plyr)
 require(scales)
 
 # Download some Data, e.g. the CBOE VIX 
-getSymbols("^VIX",src="yahoo")
+getSymbols("^VIX",src="yahoo",auto.assign=TRUE)
 
 # Make a dataframe
 dat<-data.frame(date=index(VIX),VIX)
@@ -36,10 +36,7 @@ dat<-ddply(dat,.(yearmonthf),transform,monthweek=1+week-min(week))
 # Now for the plot
 P<- ggplot(dat, aes(monthweek, weekdayf, fill = VIX.Close)) + 
   geom_tile(colour = "white") + facet_grid(year~monthf) + scale_fill_gradient(low="red", high="yellow") + 
-  theme(title = "Time-Series Calendar Heatmap") +  xlab("Week of Month") + ylab("")
+  labs(title = "Time-Series Calendar Heatmap") +  xlab("Week of Month") + ylab("")
 P
 
-P<- ggplot(dat, aes(monthweek, weekdayf)) + geom_title(aes(fill = VIX.Close) + 
-  color = "white") + facet_grid(year~monthf) + scale_fill_gradient(low="red", high="yellow") + 
-  theme(title = "Time-Series Calendar Heatmap") +  xlab("Week of Month") + ylab("")
 
