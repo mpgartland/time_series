@@ -1,14 +1,18 @@
 ===
 Week3-4_class.Rmd
-Requires: fpp, forecast packages
+Requires: fpp2, forecast packages
+fpp is a data package
 ===
+
+ 
  
 Most of this code is adapted from the code available with the FPP book
 First let's look at how to implement simple exponential smoothing (SES)
 
 
 ```{r}
-require(fpp)
+require(forecast)
+require(fpp2)
 # Simple exponential smoothing - code from the FPP book 
 
 oildata <- window(oil, start = 1996, end = 2007)
