@@ -33,10 +33,10 @@ autoplot(elecsales) + xlab("Year") + ylab("GWh") +
 
 ```{r}
 #Setting of periods to average
-ma(elecsales, 5)
+ma(elecsales, 7)
 
 autoplot(elecsales, series="Data") +
-  autolayer(ma(elecsales,5), series="5-MA") +
+  autolayer(ma(elecsales,7), series="5-MA") +
   xlab("Year") + ylab("GWh") +
   ggtitle("Annual electricity sales: South Australia") +
   scale_colour_manual(values=c("Data"="grey50","5-MA"="red"),
