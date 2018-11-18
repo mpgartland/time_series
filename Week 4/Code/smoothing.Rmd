@@ -27,6 +27,7 @@ class(fit3)
 
 #what is in them
 summary(fit3)
+summary(fit2)
 
 ```
 Notice:  we used the SES command and it executed the ETS(A,N,N) command.  ses is just a wrapper for ETS.  
@@ -45,7 +46,7 @@ lines(fitted(fit3), col="green", type="o")
 
 legend("topleft",lty=1, col=c(1,"blue","red","green"), cex = 0.75, 
        c("data", expression(alpha == 0.2), expression(alpha == 0.6),
-         expression(alpha == 0.89)),pch=1)
+         expression(alpha == 0.79)),pch=1)
 
 ```
 
@@ -73,7 +74,7 @@ lines(fit2$mean, col="red", type="o")
 lines(fit3$mean, col="green", type="o")
 legend("topleft",lty=1, cex =0.75, col=c(1,"blue","red","green"),
 c("data", expression(alpha == 0.2), expression(alpha == 0.6),
-expression(alpha == 0.89)),pch=1)
+expression(alpha == 0.79)),pch=1)
 ```
 Next set of methods: Holt exponential smoothing.
 
@@ -84,7 +85,7 @@ summary(fith)
 oildata[1]
 ```
 Notice that it shows the parameter settings we gave it. We now have a setting for the effect of the trend.  What's the initial value?  It's the first value of the oildata series - because we set the initialization routine = "simple"
-
+fith$mean
 Adding these lines to our chart.  What is the effect of adding trend? 
 ```{r}
 plot(fith, PI=TRUE, ylim = c(400, 600))
@@ -99,7 +100,7 @@ lines(fit2$mean, col="red", type="o")
 lines(fit3$mean, col="green", type="o")
 legend("topleft",lty=1, cex = 0.75, col=c(1,"blue","red","green", "purple"),
        c("data", expression(alpha == 0.2), expression(alpha == 0.6),
-         expression(alpha == 0.89),"Holt"),pch=1)
+         expression(alpha == 0.99),"Holt"),pch=1)
 ```
 
 That was the additive trend model - let's make it muliplicative.  
@@ -350,4 +351,3 @@ qqnorm(BoxCox(AirPassengers, .4))
 ```
 
 
-Same thing. 
