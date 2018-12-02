@@ -1,0 +1,417 @@
+---
+title: "dynamic regression"
+output: html_document
+---
+title:: Applied forecasting for business and economics"
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=TRUE, warning=FALSE, message=FALSE,
+  dev.args=list(bg=grey(0.9), pointsize=11))
+library(fpp2)
+```
+
+# Regression with ARIMA errors
+
+## US personal consumption and income
+```{r usconsump, fig.height=6, fig.width=8.5}
+autoplot(uschange, facets=TRUE) +
+  xlab("Year") + ylab("") +
+  ggtitle("Quarterly changes in US consumption and personal income")
+```
+
+## US personal consumption and income
+
+
+```{r, fig.height=6, fig.width=8.5}
+ggplot(aes(x=Income,y=Consumption), data=as.data.frame(uschange)) +
+  geom_point() +
+  ggtitle("Quarterly changes in US consumption and personal income")
+```
+
+## US personal consumption and income
+
+  * No need for transformations or further differencing.
+  *  Increase in income does not necessarily translate into instant increase in consumption (e.g., after the loss of a job, it may take a few months for expenses to be reduced to allow for the new circumstances). We will ignore this for now.
+
+## US personal consumption and income
+\fontsize{11}{14}\sf
+
+```{r usconsump2, echo=TRUE, fig.height=3}
+(fit <- auto.arima(uschange[,1], xreg=uschange[,2]))
+```
+
+
+## US personal consumption and income
+\fontsize{13}{15}\sf
+
+```{r , echo=TRUE, fig.height=3.7}
+ggtsdisplay(residuals(fit, type='regression'),
+  main="Regression errors")
+```
+
+## US personal consumption and income
+\fontsize{13}{15}\sf
+
+```{r , echo=TRUE, fig.height=3.7}
+ggtsdisplay(residuals(fit, type='response'),
+  main="ARIMA errors")
+```
+
+## US personal consumption and income
+
+```{r , echo=TRUE, fig.height=3.7}
+checkresiduals(fit, test=FALSE)
+```
+
+## US personal consumption and income
+\fontsize{10}{13}\sf
+
+```{r , echo=TRUE, fig.height=3.7}
+checkresiduals(fit, plot=FALSE)
+```
+
+## US personal consumption and income
+\fontsize{9}{12}\sf
+
+```{r usconsump3, echo=TRUE, fig.height=3.}
+fcast <- forecast(fit,
+  xreg=rep(mean(uschange[,2]),8), h=8)
+autoplot(fcast) + xlab("Year") +
+  ylab("Percentage change") +
+  ggtitle("Forecasts from regression with ARIMA(1,0,2) errors")
+```
+
+## Forecasting
+
+  * To forecast a regression model with ARIMA errors, we need to forecast the
+regression part of the model and the ARIMA part of the model and combine the
+results.
+  * Some predictors are known into the future (e.g., time, dummies).
+  * Separate forecasting models may be needed for other predictors.
+  * Forecast intervals ignore the uncertainty in forecasting the predictors.
+
+## Daily electricity demand
+\fontsize{12}{13}\sf
+
+Model daily electricity demand as a function of temperature using quadratic regression with ARMA errors.
+
+\fontsize{10}{12}\sf
+
+```{r, echo=TRUE, fig.height=3.6}
+qplot(elecdaily[,"Temperature"], elecdaily[,"Demand"]) +
+  xlab("Temperature") + ylab("Demand")
+```
+
+## Daily electricity demand
+\fontsize{12}{13}\sf
+
+```{r, echo=TRUE, fig.height=4}
+autoplot(elecdaily, facets = TRUE)
+```
+
+## Daily electricity demand
+\fontsize{9}{10}\sf
+
+```{r, echo=TRUE}
+xreg <- cbind(MaxTemp = elecdaily[, "Temperature"],
+              MaxTempSq = elecdaily[, "Temperature"]^2,
+              Workday = elecdaily[, "WorkDay"])
+fit <- auto.arima(elecdaily[, "Demand"], xreg = xreg)
+checkresiduals(fit)
+```
+
+## Daily electricity demand
+\fontsize{9}{10}\sf
+
+```{r, echo=FALSE}
+checkresiduals(fit, plot=FALSE)
+```
+
+## Daily electricity demand
+\fontsize{10}{13}\sf
+
+```{r, echo=TRUE}
+# Forecast one day ahead
+forecast(fit, xreg = cbind(26, 26^2, 1))
+```
+
+## Daily electricity demand
+\fontsize{10}{13}\sf
+```{r echo=TRUE}
+fcast <- forecast(fit,
+  xreg = cbind(rep(26,14), rep(26^2,14),
+    c(0,1,0,0,1,1,1,1,1,0,0,1,1,1)))
+autoplot(fcast) + ylab("Electicity demand (GW)")
+```
+
+
+# Stochastic and deterministic trends
+
+## Stochastic \& deterministic trends
+
+## International visitors
+```{r}
+autoplot(austa) + xlab("Year") +
+  ylab("millions of people") +
+  ggtitle("Total annual international visitors to Australia")
+```
+## International visitors
+\fontsize{10}{10}\sf
+**Deterministic trend**
+```{r, echo=TRUE}
+trend <- seq_along(austa)
+(fit1 <- auto.arima(austa, d=0, xreg=trend))
+```
+\pause\vspace*{-0.1cm}
+```{r austaparams, echo=FALSE}
+phi1 <- coef(fit1)['ar1']
+phi2 <- coef(fit1)['ar2']
+intercept <- coef(fit1)['intercept']
+slope <- coef(fit1)['xreg']
+sigma2 <- fit1$sigma2
+```
+###
+
+## International visitors
+\fontsize{10}{10}\sf
+
+**Stochastic trend**
+
+```{r, echo=TRUE}
+(fit2 <- auto.arima(austa,d=1))
+```
+\pause\vspace*{-0.1cm}
+
+
+```{r austaparams2, cache=TRUE, echo=FALSE}
+drift <- coef(fit2)['drift']
+theta1 <- coef(fit2)['ma1']
+sigma2 <- fit2$sigma2
+```
+
+## International visitors
+
+```{r, fig.height=2.2}
+autoplot(forecast(fit1, xreg=length(austa) + 1:10)) +
+  xlab("Year") + ylab("") +
+  ggtitle("Forecasts from linear trend with AR(2) error")
+```
+
+```{r, fig.height=2.2}
+autoplot(forecast(fit2)) +
+  xlab("Year") + ylab("") +
+  ggtitle("Forecasts from ARIMA(0,1,1) with drift")
+```
+
+## International visitors
+
+```{r echo=FALSE, fig.height=5.5, fig.width=8.5}
+fc1 <- forecast(fit1,
+  xreg = data.frame(trend = length(austa) + 1:10))
+fc2 <- forecast(fit2, h=10)
+autoplot(austa) +
+  autolayer(fc2, series="Stochastic trend") +
+  autolayer(fc1, series="Deterministic trend") +
+  ggtitle("Forecasts from trend models") +
+  xlab("Year") + ylab("Visitors to Australia (millions)") +
+  guides(colour=guide_legend(title="Forecast"))
+```
+
+## Forecasting with trend
+
+  * Point forecasts are almost identical, but prediction intervals differ.
+  * Stochastic trends have much wider prediction intervals because the errors are non-stationary.
+  * Be careful of forecasting with deterministic trends too far ahead.
+
+# Dynamic harmonic regression
+
+## Dynamic harmonic regression
+
+ **Combine Fourier terms with ARIMA errors**
+
+### Advantages
+   * it allows any length seasonality;
+   * for data with more than one seasonal period, you can include Fourier terms of different frequencies;
+   * the seasonal pattern is smooth for small values of $K$ (but more wiggly seasonality can be handled by increasing $K$);
+   * the short-term dynamics are easily handled with a simple ARMA error.
+
+### Disadvantages
+ * seasonality is assumed to be fixed
+
+
+## Eating-out expenditure
+
+```{r cafe, echo=TRUE, fig.height=4.6, fig.width=8}
+cafe04 <- window(auscafe, start=2004)
+autoplot(cafe04)
+cafefit <- function(K)
+{
+  require(latex2exp)
+  fit <- auto.arima(cafe04, xreg=fourier(cafe04, K=K),
+                  seasonal = FALSE, lambda = 0)
+  reg <- log(cafe04) - residuals(fit, type='regression')
+  reg <- exp(reg - mean(reg) + mean(log(cafe04)))
+  fc <- fit %>%
+    forecast(xreg=fourier(cafe04, K=K, h=24))
+  autoplot(cafe04, series="Data") +
+    autolayer(fc) + ggtitle(TeX(paste(fc$method,"and $\\lambda = 0$"))) +
+    autolayer(reg, series="Regression fit") +
+    xlab(paste("K=",K,"   AICC=",round(fit$aicc,2))) +
+    ylab("") + ylim(1.5,4.7)
+}
+```
+
+## Eating-out expenditure
+
+```{r cafe1, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(1)
+```
+
+## Eating-out expenditure
+
+```{r cafe2, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(2)
+```
+
+## Eating-out expenditure
+
+```{r cafe3, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(3)
+```
+
+## Eating-out expenditure
+
+```{r cafe4, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(4)
+```
+
+## Eating-out expenditure
+
+```{r cafe5, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(5)
+```
+
+## Eating-out expenditure
+
+```{r cafe6, dependson='cafe', fig.height=5, echo=FALSE}
+cafefit(6)
+```
+
+## Example: weekly gasoline products
+\fontsize{8}{8}\sf
+
+```{r gasmodel, echo=TRUE}
+harmonics <- fourier(gasoline, K = 13)
+(fit <- auto.arima(gasoline, xreg = harmonics, seasonal = FALSE))
+```
+
+## Example: weekly gasoline products
+\fontsize{11}{12}\sf
+
+```{r gasf, echo=TRUE, fig.height=3.5}
+newharmonics <- fourier(gasoline, K = 13, h = 156)
+fc <- forecast(fit, xreg = newharmonics)
+autoplot(fc)
+```
+
+## 5-minute call centre volume
+
+```{r calls, echo=TRUE, fig.height=4}
+autoplot(calls)
+```
+
+## 5-minute call centre volume
+\fontsize{8}{8}\sf
+
+```{r callsmodel, echo=TRUE}
+xreg <- fourier(calls, K = c(10,0))
+(fit <- auto.arima(calls, xreg=xreg, seasonal=FALSE, stationary=TRUE))
+```
+
+## 5-minute call centre volume
+
+```{r callsres, echo=TRUE}
+checkresiduals(fit, test=FALSE)
+```
+
+## 5-minute call centre volume
+\fontsize{10}{11}\sf
+
+```{r callsf, echo=TRUE, fig.height=4}
+fc <- forecast(fit, xreg = fourier(calls, c(10,0), 1690))
+autoplot(fc)
+```
+
+# Lagged predictors
+
+## Lagged predictors
+
+
+## Example: Insurance quotes and TV adverts
+```{r tvadvert}
+autoplot(insurance, facets=TRUE) +
+  xlab("Year") + ylab("") +
+  ggtitle("Insurance advertising and quotations")
+```
+## Example: Insurance quotes and TV adverts
+\fontsize{10}{10}\sf
+```{r, echo=TRUE}
+Advert <- cbind(
+    AdLag0 = insurance[,"TV.advert"],
+    AdLag1 = lag(insurance[,"TV.advert"],-1),
+    AdLag2 = lag(insurance[,"TV.advert"],-2),
+    AdLag3 = lag(insurance[,"TV.advert"],-3)) %>%
+  head(NROW(insurance))
+# Restrict data so models use same fitting period
+fit1 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1],
+  stationary=TRUE)
+fit2 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1:2],
+  stationary=TRUE)
+fit3 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1:3],
+  stationary=TRUE)
+fit4 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1:4],
+  stationary=TRUE)
+c(fit1$aicc,fit2$aicc,fit3$aicc,fit4$aicc)
+```
+## Example: Insurance quotes and TV adverts
+\fontsize{10}{10}\sf
+```{r tvadvertagain, echo=TRUE}
+(fit <- auto.arima(insurance[,1], xreg=Advert[,1:2],
+  stationary=TRUE))
+```
+\pause
+```{r tvadvertparam, echo=FALSE}
+# Store coefficients
+phi1 <- coef(fit)['ar1']
+phi2 <- coef(fit)['ar2']
+phi3 <- coef(fit)['ar3']
+intercept <- coef(fit)['intercept']
+gamma0 <- coef(fit)['AdLag0']
+gamma1 <- coef(fit)['AdLag1']
+```
+###
+
+## Example: Insurance quotes and TV adverts
+\fontsize{11}{13}\sf
+```{r, echo=TRUE, fig.height=3.3}
+fc <- forecast(fit, h=20,
+  xreg=cbind(c(Advert[40,1],rep(10,19)), rep(10,20)))
+autoplot(fc)
+```
+## Example: Insurance quotes and TV adverts
+\fontsize{11}{13}\sf
+```{r, echo=TRUE, fig.height=3.3}
+fc <- forecast(fit, h=20,
+  xreg=cbind(c(Advert[40,1],rep(8,19)), rep(8,20)))
+autoplot(fc)
+```
+## Example: Insurance quotes and TV adverts
+\fontsize{11}{13}\sf
+```{r, echo=TRUE, fig.height=3.3}
+fc <- forecast(fit, h=20,
+  xreg=cbind(c(Advert[40,1],rep(6,19)), rep(6,20)))
+autoplot(fc)
+```
+## Transfer function models
