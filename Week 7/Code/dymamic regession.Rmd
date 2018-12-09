@@ -119,6 +119,7 @@ xreg <- cbind(MaxTemp = elecdaily[, "Temperature"],
               MaxTempSq = elecdaily[, "Temperature"]^2,
               Workday = elecdaily[, "WorkDay"])
 fit <- auto.arima(elecdaily[, "Demand"], xreg = xreg)
+summary(fit)
 checkresiduals(fit)
 ```
 
@@ -365,7 +366,7 @@ Advert <- cbind(
     AdLag3 = lag(insurance[,"TV.advert"],-3)) %>%
   head(NROW(insurance))
 # Restrict data so models use same fitting period
-fit1 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1],
+fit1 <- auto.arima(insurance[4 :40,1], xreg=Advert[4:40,1],
   stationary=TRUE)
 fit2 <- auto.arima(insurance[4:40,1], xreg=Advert[4:40,1:2],
   stationary=TRUE)

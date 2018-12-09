@@ -1,0 +1,361 @@
+---
+title: "Week 8: Applied forecasting for business and economics"
+author: "Ch11 & 12. Advanced forecasting methods"
+date: "OTexts.org/fpp2/"
+---
+
+ 
+
+```{r set, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=TRUE, warning=FALSE, message=FALSE)
+library(fpp2)
+#source("nicefigs.R")
+```
+
+# Complex seasonality
+
+## Examples
+
+```{r gasolinedata}
+autoplot(gasoline) +
+  xlab("Year") + ylab("Thousands of barrels per day") +
+  ggtitle("Weekly US finished motor gasoline products")
+```
+
+## Examples
+
+```{r callsdata, message=FALSE, warning=FALSE}
+p1 <- autoplot(calls) +
+  ylab("Call volume") + xlab("Weeks") +
+  scale_x_continuous(breaks=seq(1,33,by=2)) +
+  ggtitle("5 minute call volume at North American bank")
+p2 <- autoplot(window(calls, end=4)) +
+  ylab("Call volume") + xlab("Weeks") +
+  scale_x_continuous(minor_breaks = seq(1,4,by=0.2))
+gridExtra::grid.arrange(p1,p2)
+```
+
+## Examples
+
+```{r turk}
+setwd("/Users/mylesgartland/OneDrive - Rockhurst University/Courses/Forecasting/Time Series/time_series/time_series/Week 8")
+telec <- read.csv("Data/turkey_elec.csv")
+telec <- msts(telec/1e3, start=2000, seasonal.periods = c(7,354.37,365.25))
+autoplot(telec) +
+  ggtitle("Turkish daily electricity demand") +
+  xlab("Year") + ylab("Electricity Demand (GW)")
+```
+
+
+
+
+
+## Complex seasonality
+\fontsize{12}{14}\sf
+
+```{r gasoline, echo=TRUE, fig.height=4}
+gasoline %>% tbats() %>% forecast() %>% autoplot()
+```
+
+## Complex seasonality
+\fontsize{12}{14}\sf
+
+```{r callcentref, echo=TRUE, fig.height=4}
+calls %>% tbats() %>% forecast() %>% autoplot()
+```
+
+## Complex seasonality
+\fontsize{12}{14}\sf
+
+```{r telecf, echo=TRUE, fig.height=4}
+telec %>% tbats() %>% forecast() %>% autoplot()
+```
+
+
+## TBATS model
+
+
+
+* Coefficients attached to predictors are called "weights".
+* Forecasts are obtained by a linear combination of inputs.
+* Weights selected using a "learning algorithm" that minimises a "cost function".
+
+## Neural network models
+
+
+## Neural network models
+
+Inputs to hidden neuron $j$ linearly combined:
+\[
+z_j = b_j + \sum_{i=1}^4 w_{i,j} x_i.
+\]
+Modified using nonlinear function such as a sigmoid:
+\[
+s(z) = \frac{1}{1+e^{-z}},
+\]
+This tends to reduce the effect of extreme input values, thus making the network somewhat robust to outliers.
+
+## Neural network models
+
+* Weights take random  values to begin with, which are then updated using the observed data.
+* There is an element of randomness in the predictions. So the network is usually trained several times using different random starting points, and the results are averaged.
+* Number of hidden layers, and the number of nodes in each hidden layer, must be specified in advance.
+
+## NNAR models
+\fontsize{14}{15}\sf
+
+* Lagged values of the time series can be used as inputs to a neural network.
+* NNAR($p,k$): $p$ lagged inputs and $k$ nodes in the single hidden layer.
+* NNAR($p,0$) model is equivalent to an ARIMA($p,0,0$) model but without stationarity restrictions.
+* Seasonal NNAR($p,P,k$): inputs $(y_{t-1},y_{t-2},\dots,y_{t-p},y_{t-m},y_{t-2m},y_{t-Pm})$ and $k$ neurons in the hidden layer.
+* NNAR($p,P,0$)$_m$ model is equivalent to an ARIMA($p,0,0$)($P$,0,0)$_m$ model but without stationarity restrictions.
+
+## NNAR models in R
+\fontsize{14}{16}\sf
+
+* The `nnetar()` function fits an NNAR($p,P,k$)$_m$ model.
+* If $p$ and $P$ are not specified, they are automatically selected.
+* For non-seasonal time series, default $p=$ optimal number of lags (according to the AIC) for a linear AR($p$) model.
+* For seasonal time series, defaults are $P=1$ and $p$ is chosen from the optimal linear model fitted to the seasonally adjusted data.
+* Default $k=(p+P+1)/2$ (rounded to the nearest integer).
+
+## Sunspots
+
+* Surface of the sun contains magnetic regions that appear as dark spots.
+* These affect the propagation of radio waves and so telecommunication companies like to predict sunspot activity in order to plan for any future difficulties.
+* Sunspots follow a cycle of length between 9 and 14 years.
+
+## NNAR(9,5) model for sunspots
+\fontsize{11}{11}\sf
+
+```{r sunspot-nnetar, echo=TRUE, fig.height=4}
+fit <- nnetar(sunspotarea)
+fit %>% forecast(h=20) %>% autoplot()
+```
+
+## Prediction intervals by simulation
+\fontsize{11}{11}\sf
+
+```{r sunspot-nnetar-pi, echo=TRUE, fig.height=4}
+fit %>% forecast(h=20, PI=TRUE) %>% autoplot()
+```
+
+# Bootstrapping and bagging
+
+```{r}
+bootseries <- bld.mbb.bootstrap(debitcards, 10) %>%
+  as.data.frame() %>% ts(start=2000, frequency=12)
+autoplot(debitcards) +
+  autolayer(bootseries, colour=TRUE) +
+  autolayer(debitcards, colour=FALSE) +
+  ylab("Bootstrapped series") + guides(colour="none")
+```
+
+Prediction Invervals
+
+```{r}
+nsim <- 1000L
+sim <- bld.mbb.bootstrap(debitcards, nsim)
+
+h <- 36L
+future <- matrix(0, nrow=nsim, ncol=h)
+for(i in seq(nsim))
+  future[i,] <- simulate(ets(sim[[i]]), nsim=h)
+
+start <- tsp(debitcards)[2]+1/12
+simfc <- structure(list(
+    mean = ts(colMeans(future), start=start, frequency=12),
+    lower = ts(apply(future, 2, quantile, prob=0.025),
+               start=start, frequency=12),
+    upper = ts(apply(future, 2, quantile, prob=0.975),
+               start=start, frequency=12),
+    level=95),
+  class="forecast")
+
+etsfc <- forecast(ets(debitcards), h=h, level=95)
+autoplot(debitcards) +
+  ggtitle("Monthly retail debit card usage in Iceland") +
+  xlab("Year") + ylab("million ISK") +
+  autolayer(simfc, series="Simulated") +
+  autolayer(etsfc, series="ETS")
+```
+
+
+
+```{r}
+sim <- bld.mbb.bootstrap(debitcards, 10) %>%
+  as.data.frame() %>%
+  ts(frequency=12, start=2000)
+fc <- purrr::map(as.list(sim),
+           function(x){forecast(ets(x))[["mean"]]}) %>%
+      as.data.frame() %>%
+      ts(frequency=12, start=start)
+autoplot(debitcards) +
+  autolayer(sim, colour=TRUE) +
+  autolayer(fc, colour=TRUE) +
+  autolayer(debitcards, colour=FALSE) +
+  ylab("Bootstrapped series") +
+  guides(colour="none")
+```
+
+```{r}
+etsfc <- debitcards %>% ets() %>% forecast(h=36)
+baggedfc <- debitcards %>% baggedETS() %>% forecast(h=36)
+autoplot(debitcards) +
+  autolayer(baggedfc, series="BaggedETS", PI=FALSE) +
+  autolayer(etsfc, series="ETS", PI=FALSE) +
+  guides(colour=guide_legend(title="Forecasts"))
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE, warning=FALSE, message=FALSE)
+library(fpp2)
+options(digits=3,width=50)
+```
+
+# Models for different frequencies
+
+
+
+## Positive forecasts
+\fontsize{12}{12}\sf
+
+```{r}
+eggs %>%
+  ets(model="AAN", damped=FALSE, lambda=0) %>%
+  forecast(h=50, biasadj=TRUE) %>%
+  autoplot()
+```
+
+
+# Forecast combinations
+
+## Forecast combinations
+
+### Clemen (1989)
+"The results have been virtually unanimous: combining multiple forecasts leads to increased forecast accuracy. \dots In many cases one can make dramatic performance improvements by simply averaging the forecasts."
+
+## Forecast combinations
+\fontsize{10}{10}\sf\vspace*{-0.2cm}
+```{r}
+train <- window(auscafe, end=c(2012,9))
+h <- length(auscafe) - length(train)
+ETS <- forecast(ets(train), h=h)
+ARIMA <- forecast(auto.arima(train, lambda=0, biasadj=TRUE),
+  h=h)
+STL <- stlf(train, lambda=0, h=h, biasadj=TRUE)
+NNAR <- forecast(nnetar(train), h=h)
+TBATS <- forecast(tbats(train, biasadj=TRUE), h=h)
+Combination <- (ETS[["mean"]] + ARIMA[["mean"]] +
+  STL[["mean"]] + NNAR[["mean"]] + TBATS[["mean"]])/5
+
+autoplot(auscafe) +
+  autolayer(ETS, series="ETS", PI=FALSE) +
+  autolayer(ARIMA, series="ARIMA", PI=FALSE) +
+  autolayer(STL, series="STL", PI=FALSE) +
+  autolayer(NNAR, series="NNAR", PI=FALSE) +
+  autolayer(TBATS, series="TBATS", PI=FALSE) +
+  autolayer(Combination, series="Combination") +
+  xlab("Year") + ylab("$ billion") +
+  ggtitle("Australian monthly expenditure on eating out")
+```
+
+## Forecast combinations
+\fontsize{10}{10}\sf\vspace*{-0.2cm}
+```{r combine1, message=FALSE, warning=FALSE, echo=FALSE}
+train <- window(auscafe, end=c(2012,9))
+h <- length(auscafe) - length(train)
+ETS <- forecast(ets(train), h=h)
+ARIMA <- forecast(auto.arima(train, lambda=0, biasadj=TRUE),
+  h=h)
+STL <- stlf(train, lambda=0, h=h, biasadj=TRUE)
+NNAR <- forecast(nnetar(train), h=h)
+TBATS <- forecast(tbats(train, biasadj=TRUE), h=h)
+Combination <- (ETS[["mean"]] + ARIMA[["mean"]] +
+  STL[["mean"]] + NNAR[["mean"]] + TBATS[["mean"]])/5
+```
+
+```{r combineplot, dependson="combine1", echo=FALSE, fig.height=4.8}
+autoplot(auscafe) +
+  autolayer(ETS, series="ETS", PI=FALSE) +
+  autolayer(ARIMA, series="ARIMA", PI=FALSE) +
+  autolayer(STL, series="STL", PI=FALSE) +
+  autolayer(NNAR, series="NNAR", PI=FALSE) +
+  autolayer(TBATS, series="TBATS", PI=FALSE) +
+  autolayer(Combination, series="Combination") +
+  xlab("Year") + ylab("$ billion") +
+  ggtitle("Australian monthly expenditure on eating out")
+```
+
+## Forecast combinations
+\fontsize{11}{15}\sf
+```{r combineaccuracy, dependson="combine1"}
+c(ETS = accuracy(ETS, auscafe)["Test set","RMSE"],
+  ARIMA = accuracy(ARIMA, auscafe)["Test set","RMSE"],
+  `STL-ETS` = accuracy(STL, auscafe)["Test set","RMSE"],
+  NNAR = accuracy(NNAR, auscafe)["Test set","RMSE"],
+  TBATS = accuracy(TBATS, auscafe)["Test set","RMSE"],
+  Combination =
+    accuracy(Combination, auscafe)["Test set","RMSE"])
+```
+
+# Missing values
+
+## Missing values
+\fontsize{14}{15}\sf
+
+**Functions which can handle missing values**
+
+ * `auto.arima()`, `Arima()`
+ * `tslm()`
+ * `nnetar()`
+
+**Models which cannot handle missing values**
+
+ * `ets()`
+ * `stl()`
+ * `stlf()`
+ * `tbats()`
+
+\pause
+
+### What to do?
+ 1. Model section of data after last missing value.
+ 2. Estimate missing values with `na.interp()`.
+
+## Missing values
+\fontsize{12}{12}\sf
+```{r}
+autoplot(gold)
+```
+
+## Missing values
+\fontsize{12}{12}\sf
+```{r, fig.height=3}
+gold %>% na.interp() %>%
+  autoplot(series="Interpolated") +
+    autolayer(gold, series="Original") +
+    scale_color_manual(
+      values=c(`Interpolated`="red",`Original`="gray"))
+```
+
+# Outliers
+
+## Outliers
+
+```{r, fig.height=3.4}
+autoplot(gold)
+```
+
+## Outliers
+
+```{r, fig.height=3.4}
+tsoutliers(gold)
+```
+
+## Outliers
+
+```{r, fig.height=3.4}
+gold %>% tsclean() %>% autoplot()
+```
